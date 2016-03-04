@@ -192,4 +192,32 @@ class Client
     {
         return $this->updatedAt;
     }
+    /**
+     * @var string
+     */
+    private $idToken;
+
+
+    /**
+     * Set idToken
+     *
+     * @param string $idToken
+     * @return Client
+     */
+    public function setIdToken($idToken)
+    {
+        $this->idToken = $idToken;
+
+        return $this;
+    }
+
+    /**
+     * Get idToken
+     *
+     * @return string
+     */
+    public function getIdToken()
+    {
+        return $this->idToken;
+    }
 }

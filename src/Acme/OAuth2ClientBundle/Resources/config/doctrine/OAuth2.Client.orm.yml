@@ -31,6 +31,10 @@ Acme\OAuth2ClientBundle\Entity\OAuth2\Client:
             type: string
             length: '4000'
             nullable: true
+        idToken:
+            type: string
+            length: 255
+            nullable: true
         updatedAt:
             type: datetimetz
             column: updated_at
