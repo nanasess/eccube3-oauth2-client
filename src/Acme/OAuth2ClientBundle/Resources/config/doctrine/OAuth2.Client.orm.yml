@@ -1,0 +1,37 @@
+Acme\OAuth2ClientBundle\Entity\OAuth2\Client:
+    type: entity
+    table: null
+    repositoryClass: Acme\OAuth2ClientBundle\Repository\OAuth2\ClientRepository
+    id:
+        id:
+            type: integer
+            id: true
+            generator:
+                strategy: AUTO
+    fields:
+        accessToken:
+            type: string
+            length: 255
+            unique: true
+            column: access_token
+        tokenType:
+            type: string
+            length: '32'
+            nullable: true
+            column: token_type
+        expiresIn:
+            type: integer
+            column: expires_in
+        refreshToken:
+            type: string
+            length: 255
+            nullable: true
+            column: refresh_token
+        scope:
+            type: string
+            length: '4000'
+            nullable: true
+        updatedAt:
+            type: datetimetz
+            column: updated_at
+    lifecycleCallbacks: {  }
