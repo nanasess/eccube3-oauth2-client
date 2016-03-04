@@ -1,0 +1,4 @@
+services:
+#    acme_o_auth2_client.example:
+#        class: Acme\OAuth2ClientBundle\Example
+#        arguments: ["@service_id", "plain_value", %parameter%]
