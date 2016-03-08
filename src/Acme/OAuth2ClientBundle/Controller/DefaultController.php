@@ -140,4 +140,20 @@ class DefaultController extends Controller
         $em->flush($OAuth2);
         return $this->redirect('/');
     }
+
+    /**
+     * @Route("/oauth2/tokeninfo")
+     */
+    public function tokenInfoAction()
+    {
+        $em = $this->getDoctrine()->getManager();
+        $OAuth2 = $em->getRepository('AcmeOAuth2ClientBundle:OAuth2\Client')->find(1);
+        if (!is_object($OAuth2)) {
+            throw new \Exception('OAuth2 unauthorization');
+        }
+        $client = new Client('http://192.168.56.101:8081');
+        $payload = $client->get('/OAuth2/tokeninfo?id_token='.$OAuth2->getIdToken(),array())->send()->json();
+        var_dump($payload);
+        return $this->render('AcmeOAuth2ClientBundle:Default:index.html.twig', array('access_token' => null));
+    }
 }
