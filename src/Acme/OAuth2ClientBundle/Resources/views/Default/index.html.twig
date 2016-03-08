@@ -1,5 +1,8 @@
+<!-- † -->
 <h1>OAuth2 Client</h1>
 
-<p><a href="http://192.168.56.101:8081/OAuth2/authorize?client_id=testclient&redirect_uri=http%3A%2F%2Flocalhost:8000%2Foauth2&response_type=code&state=aaa&scope=openid%20read%20write">OAuth2認証</a></p>
+<p>access_token: {{ access_token  }}</p>
+<p><a href="http://192.168.56.101:8081/OAuth2/authorize?client_id=testclient&redirect_uri=http%3A%2F%2Flocalhost:8000%2Foauth2%2Freceive_authcode&response_type=code&state=aaa&scope=read%20write%20openid%20offline_access">OAuth2認証</a></p>
 <p><a href="/api/example">GET /api/example</a></p>
+<p><a href="/oauth2/refresh">refresh</a></p>
 <p><a href="/">Go TOP</a></p>

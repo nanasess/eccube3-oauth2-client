@@ -14,7 +14,7 @@ class DefaultController extends Controller
      */
     public function indexAction()
     {
-        return $this->render('AcmeOAuth2ClientBundle:Default:index.html.twig');
+        return $this->render('AcmeOAuth2ClientBundle:Default:index.html.twig', array('access_token' => null));
     }
 
     /**
@@ -28,7 +28,6 @@ class DefaultController extends Controller
         if (!is_object($OAuth2)) {
             throw new \Exception('OAuth2 unauthorization');
         }
-var_dump($OAuth2->getAccessToken());
         $client = new Client('http://192.168.56.101:8081');
         // if ($OAuth2->isExpire()) {
         //     $params = array(
@@ -50,11 +49,11 @@ var_dump($OAuth2->getAccessToken());
                                 ),
                                 $params)->send()->json();
         var_dump($example);
-        return $this->render('AcmeOAuth2ClientBundle:Default:index.html.twig');
+        return $this->render('AcmeOAuth2ClientBundle:Default:index.html.twig', array('access_token' => $OAuth2->getAccessToken()));
     }
 
     /**
-     * @Route("/oauth2")
+     * @Route("/oauth2/receive_authcode")
      */
     public function oAuth2Action()
     {
@@ -62,13 +61,12 @@ var_dump($OAuth2->getAccessToken());
         $authorized_code = $request->get('code');
         $client = new Client('http://192.168.56.101:8081');
         $params = array(
-            'grant_type'    => 'authorization_code',
             'grant_type' => 'authorization_code',
             'code' => $authorized_code,
             'client_id' => 'testclient',
             'client_secret' => 'testpass',
             'state' => 'aaa',
-            'redirect_uri' => 'http://localhost:8000/oauth2'
+            'redirect_uri' => 'http://localhost:8000/oauth2/receive_authcode'
         );
         $token = $client->post('/OAuth2/token', array(), $params)->send()->json();
 
@@ -77,23 +75,69 @@ var_dump($OAuth2->getAccessToken());
         if (!is_object($OAuth2)) {
             $OAuth2 = new \Acme\OAuth2ClientBundle\Entity\OAuth2\Client();
             $OAuth2->setAccessToken($token['access_token']);
+            if (array_key_exists('refresh_token', $token)) {
+                $OAuth2->setRefreshToken($token['refresh_token']);
+            }
             $OAuth2->setExpiresIn($token['expires_in']);
             $OAuth2->setTokenType($token['token_type']);
             $OAuth2->setScope($token['scope']);
-            $OAuth2->setIdToken($token['id_token']);
+            if (array_key_exists('id_token', $token)) {
+                $OAuth2->setIdToken($token['id_token']);
+            }
             $OAuth2->setUpdatedAt(new \DateTime());
             $em->persist($OAuth2);
         } else {
             $OAuth2->setAccessToken($token['access_token']);
+            if (array_key_exists('refresh_token', $token)) {
+                $OAuth2->setRefreshToken($token['refresh_token']);
+            }
             $OAuth2->setExpiresIn($token['expires_in']);
             $OAuth2->setTokenType($token['token_type']);
             $OAuth2->setScope($token['scope']);
-            $OAuth2->setIdToken($token['id_token']);
+            if (array_key_exists('id_token', $token)) {
+                $OAuth2->setIdToken($token['id_token']);
+            }
             $OAuth2->setUpdatedAt(new \DateTime());
         }
         $em->flush($OAuth2);
 
         var_dump($token);
+        return $this->redirect('/');
+    }
+
+    /**
+     * @Route("/oauth2/refresh")
+     */
+    public function refreshAction()
+    {
+        $em = $this->getDoctrine()->getManager();
+        $OAuth2 = $em->getRepository('AcmeOAuth2ClientBundle:OAuth2\Client')->find(1);
+        if (!is_object($OAuth2)) {
+            throw new \Exception('OAuth2 unauthorization');
+        }
+        $client = new Client('http://192.168.56.101:8081');
+        var_dump($OAuth2->getRefreshToken());
+        $params = array(
+                'grant_type'    => 'refresh_token',
+                'client_id' => 'testclient',
+                'client_secret' => 'testpass',
+                'refresh_token'         => $OAuth2->getRefreshToken(),
+        );
+
+        $token = $client->post('/OAuth2/token', array()
+                               , $params)->send()->json();
+        $OAuth2->setAccessToken($token['access_token']);
+        if (array_key_exists('refresh_token', $token)) {
+            $OAuth2->setRefreshToken($token['refresh_token']);
+        }
+        $OAuth2->setExpiresIn($token['expires_in']);
+        $OAuth2->setTokenType($token['token_type']);
+        $OAuth2->setScope($token['scope']);
+        if (array_key_exists('id_token', $token)) {
+            $OAuth2->setIdToken($token['id_token']);
+        }
+        $OAuth2->setUpdatedAt(new \DateTime());
+        $em->flush($OAuth2);
         return $this->redirect('/');
     }
 }
