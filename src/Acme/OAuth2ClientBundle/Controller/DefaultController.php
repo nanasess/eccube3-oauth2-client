@@ -83,8 +83,11 @@ class DefaultController extends Controller
             $OAuth2->setScope($token['scope']);
             if (array_key_exists('id_token', $token)) {
                 $OAuth2->setIdToken($token['id_token']);
+            } else {
+                $OAuth2->setIdToken(null);
             }
             $OAuth2->setUpdatedAt(new \DateTime());
+            $OAuth2->setNonce('bbb'); // TODO
             $em->persist($OAuth2);
         } else {
             $OAuth2->setAccessToken($token['access_token']);
@@ -96,7 +99,10 @@ class DefaultController extends Controller
             $OAuth2->setScope($token['scope']);
             if (array_key_exists('id_token', $token)) {
                 $OAuth2->setIdToken($token['id_token']);
+            } else {
+                $OAuth2->setIdToken(null);
             }
+            $OAuth2->setNonce('bbb'); // TODO
             $OAuth2->setUpdatedAt(new \DateTime());
         }
         $em->flush($OAuth2);
@@ -135,6 +141,8 @@ class DefaultController extends Controller
         $OAuth2->setScope($token['scope']);
         if (array_key_exists('id_token', $token)) {
             $OAuth2->setIdToken($token['id_token']);
+        } else {
+            $OAuth2->setIdToken(null);
         }
         $OAuth2->setUpdatedAt(new \DateTime());
         $em->flush($OAuth2);

@@ -44,6 +44,15 @@ class Client
      */
     private $updatedAt;
 
+    /**
+     * @var string
+     */
+    private $idToken;
+
+    /**
+     * @var string
+     */
+    private $nonce;
 
     /**
      * Get id
@@ -192,11 +201,6 @@ class Client
     {
         return $this->updatedAt;
     }
-    /**
-     * @var string
-     */
-    private $idToken;
-
 
     /**
      * Set idToken
@@ -219,5 +223,28 @@ class Client
     public function getIdToken()
     {
         return $this->idToken;
+    }
+
+    /**
+     * Set nonce
+     *
+     * @param string $nonce
+     * @return Client
+     */
+    public function setNonce($nonce)
+    {
+        $this->nonce = $nonce;
+
+        return $this;
+    }
+
+    /**
+     * Get nonce
+     *
+     * @return string
+     */
+    public function getNonce()
+    {
+        return $this->nonce;
     }
 }
