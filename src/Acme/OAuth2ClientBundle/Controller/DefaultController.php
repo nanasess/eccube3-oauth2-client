@@ -4,6 +4,7 @@ namespace Acme\OAuth2ClientBundle\Controller;
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpFoundation\Session\Session;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Guzzle\Http\Client;
 
@@ -14,7 +15,22 @@ class DefaultController extends Controller
      */
     public function indexAction()
     {
-        return $this->render('AcmeOAuth2ClientBundle:Default:index.html.twig', array('access_token' => null));
+        $Session = new Session();
+        $nonce = $Session->get('nonce');
+        $state = $Session->get('state');
+        if (empty($nonce) || empty($state)) {
+            $nonce = sha1(openssl_random_pseudo_bytes(100));
+            $state = sha1(openssl_random_pseudo_bytes(100));
+            $Session->set('nonce', $nonce);
+            $Session->set('state', $state);
+        }
+        return $this->render('AcmeOAuth2ClientBundle:Default:index.html.twig',
+                             array(
+                                 'access_token' => null,
+                                 'nonce' => $nonce,
+                                 'state' => $state
+                             )
+        );
     }
 
     /**
@@ -22,6 +38,10 @@ class DefaultController extends Controller
      */
     public function apiCallAction()
     {
+        $Session = new Session();
+        $nonce = $Session->get('nonce');
+        $state = $Session->get('state');
+
         $em = $this->getDoctrine()->getManager();
         $params = array();
         $OAuth2 = $em->getRepository('AcmeOAuth2ClientBundle:OAuth2\Client')->find(1);
@@ -49,7 +69,13 @@ class DefaultController extends Controller
                                 ),
                                 $params)->send()->json();
         var_dump($example);
-        return $this->render('AcmeOAuth2ClientBundle:Default:index.html.twig', array('access_token' => $OAuth2->getAccessToken()));
+        return $this->render('AcmeOAuth2ClientBundle:Default:index.html.twig',
+                             array(
+                                 'access_token' => $OAuth2->getAccessToken(),
+                                 'nonce' => $nonce,
+                                 'state' => $state
+                             )
+        );
     }
 
     /**
@@ -57,6 +83,10 @@ class DefaultController extends Controller
      */
     public function oAuth2Action()
     {
+        $Session = new Session();
+        $nonce = $Session->get('nonce');
+        $state = $Session->get('state');
+
         $request = Request::createFromGlobals();
         $authorized_code = $request->get('code');
         $client = new Client('http://192.168.56.101:8081');
@@ -65,7 +95,7 @@ class DefaultController extends Controller
             'code' => $authorized_code,
             'client_id' => 'testclient',
             'client_secret' => 'testpass',
-            'state' => 'aaa',
+            'state' => $state,
             'redirect_uri' => 'http://localhost:8000/oauth2/receive_authcode'
         );
         $token = $client->post('/OAuth2/token', array(), $params)->send()->json();
@@ -87,7 +117,7 @@ class DefaultController extends Controller
                 $OAuth2->setIdToken(null);
             }
             $OAuth2->setUpdatedAt(new \DateTime());
-            $OAuth2->setNonce('bbb'); // TODO
+            $OAuth2->setNonce($nonce);
             $em->persist($OAuth2);
         } else {
             $OAuth2->setAccessToken($token['access_token']);
@@ -102,7 +132,7 @@ class DefaultController extends Controller
             } else {
                 $OAuth2->setIdToken(null);
             }
-            $OAuth2->setNonce('bbb'); // TODO
+            $OAuth2->setNonce($nonce);
             $OAuth2->setUpdatedAt(new \DateTime());
         }
         $em->flush($OAuth2);
@@ -154,6 +184,10 @@ class DefaultController extends Controller
      */
     public function tokenInfoAction()
     {
+        $Session = new Session();
+        $nonce = $Session->get('nonce');
+        $state = $Session->get('state');
+
         $em = $this->getDoctrine()->getManager();
         $OAuth2 = $em->getRepository('AcmeOAuth2ClientBundle:OAuth2\Client')->find(1);
         if (!is_object($OAuth2)) {
@@ -162,6 +196,32 @@ class DefaultController extends Controller
         $client = new Client('http://192.168.56.101:8081');
         $payload = $client->get('/OAuth2/tokeninfo?id_token='.$OAuth2->getIdToken(),array())->send()->json();
         var_dump($payload);
-        return $this->render('AcmeOAuth2ClientBundle:Default:index.html.twig', array('access_token' => null));
+        return $this->render('AcmeOAuth2ClientBundle:Default:index.html.twig',
+                             array(
+                                 'access_token' => null,
+                                 'nonce' => $nonce,
+                                 'state' => $state
+
+                             )
+        );
     }
+
+    /**
+     * @Route("/logout")
+     */
+    public function logoutAction()
+    {
+        $Session = new Session();
+        $Session->remove('nonce');
+        $Session->remove('state');
+        return $this->render('AcmeOAuth2ClientBundle:Default:index.html.twig',
+                             array(
+                                 'access_token' => null,
+                                 'nonce' => null,
+                                 'state' => null
+
+                             )
+        );
+    }
+
 }
