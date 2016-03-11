@@ -3,6 +3,7 @@
 namespace Acme\OAuth2ClientBundle\Controller;
 
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -89,6 +90,11 @@ class DefaultController extends Controller
 
         $request = Request::createFromGlobals();
         $authorized_code = $request->get('code');
+
+        if ($request->get('state') != $state) {
+            throw new BadRequestHttpException('Illegal state');
+        }
+
         $client = new Client('http://192.168.56.101:8081');
         $params = array(
             'grant_type' => 'authorization_code',
@@ -100,6 +106,28 @@ class DefaultController extends Controller
         );
         $token = $client->post('/OAuth2/token', array(), $params)->send()->json();
 
+        $id_token = null;
+        // validate id_token
+        if (array_key_exists('id_token', $token) && !empty($token['id_token'])) {
+            $id_token = $token['id_token'];
+            $payload = $client->get('/OAuth2/tokeninfo?id_token='.$id_token, array())->send()->json();
+
+            if ($payload['issuer'] != 'http://192.168.56.101:8081/') {
+                throw new BadRequestHttpException('Illegal Issuer');
+            }
+            if ($payload['audience'] != 'testclient') {
+                throw new BadRequestHttpException('Illegal audience');
+            }
+            if ($payload['expires_in'] < time()) {
+                throw new BadRequestHttpException('Token expires');
+            }
+            if ($payload['issued_at'] + 300 < time()) {
+                throw new BadRequestHttpException('issued expires');
+            }
+            if ($payload['nonce'] != $nonce) {
+                throw new BadRequestHttpException('Illegal nonce');
+            }
+        }
         $em = $this->getDoctrine()->getManager();
         $OAuth2 = $em->getRepository('AcmeOAuth2ClientBundle:OAuth2\Client')->find(1);
         if (!is_object($OAuth2)) {
@@ -111,11 +139,7 @@ class DefaultController extends Controller
             $OAuth2->setExpiresIn($token['expires_in']);
             $OAuth2->setTokenType($token['token_type']);
             $OAuth2->setScope($token['scope']);
-            if (array_key_exists('id_token', $token)) {
-                $OAuth2->setIdToken($token['id_token']);
-            } else {
-                $OAuth2->setIdToken(null);
-            }
+            $OAuth2->setIdToken($id_token);
             $OAuth2->setUpdatedAt(new \DateTime());
             $OAuth2->setNonce($nonce);
             $em->persist($OAuth2);
@@ -127,11 +151,7 @@ class DefaultController extends Controller
             $OAuth2->setExpiresIn($token['expires_in']);
             $OAuth2->setTokenType($token['token_type']);
             $OAuth2->setScope($token['scope']);
-            if (array_key_exists('id_token', $token)) {
-                $OAuth2->setIdToken($token['id_token']);
-            } else {
-                $OAuth2->setIdToken(null);
-            }
+            $OAuth2->setIdToken($id_token);
             $OAuth2->setNonce($nonce);
             $OAuth2->setUpdatedAt(new \DateTime());
         }
