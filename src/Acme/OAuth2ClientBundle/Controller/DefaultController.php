@@ -11,11 +11,26 @@ use Guzzle\Http\Client;
 
 class DefaultController extends Controller
 {
+    protected function initialize()
+    {
+        $this->oauth2 = array(
+            'server' => $this->container->getParameter('oauth2.server'),
+            'client_id' => $this->container->getParameter('oauth2.client_id'),
+            'client_secret' => $this->container->getParameter('oauth2.client_secret'),
+            'endpoints' => array(
+                'token' => $this->container->getParameter('oauth2.token_endpoint'),
+                'authorization' => $this->container->getParameter('oauth2.authorization_endpoint')
+            )
+        );
+    }
+
     /**
      * @Route("/")
      */
     public function indexAction()
     {
+        $this->initialize();
+
         $Session = new Session();
         $nonce = $Session->get('nonce');
         $state = $Session->get('state');
@@ -29,7 +44,8 @@ class DefaultController extends Controller
                              array(
                                  'access_token' => null,
                                  'nonce' => $nonce,
-                                 'state' => $state
+                                 'state' => $state,
+                                 'oauth2' => $this->oauth2
                              )
         );
     }
@@ -39,6 +55,8 @@ class DefaultController extends Controller
      */
     public function apiCallAction()
     {
+        $this->initialize();
+
         $Session = new Session();
         $nonce = $Session->get('nonce');
         $state = $Session->get('state');
@@ -49,7 +67,7 @@ class DefaultController extends Controller
         if (!is_object($OAuth2)) {
             throw new \Exception('OAuth2 unauthorization');
         }
-        $client = new Client('http://192.168.56.101:8081');
+        $client = new Client($this->oauth2['server']);
         // if ($OAuth2->isExpire()) {
         //     $params = array(
         //         'grant_type'    => 'refresh_token',
@@ -74,7 +92,8 @@ class DefaultController extends Controller
                              array(
                                  'access_token' => $OAuth2->getAccessToken(),
                                  'nonce' => $nonce,
-                                 'state' => $state
+                                 'state' => $state,
+                                 'oauth2' => $this->oauth2
                              )
         );
     }
@@ -84,6 +103,8 @@ class DefaultController extends Controller
      */
     public function oAuth2Action()
     {
+        $this->initialize();
+
         $Session = new Session();
         $nonce = $Session->get('nonce');
         $state = $Session->get('state');
@@ -95,16 +116,21 @@ class DefaultController extends Controller
             throw new BadRequestHttpException('Illegal state');
         }
 
-        $client = new Client('http://192.168.56.101:8081');
+        $client = new Client($this->oauth2['server']);
         $params = array(
             'grant_type' => 'authorization_code',
             'code' => $authorized_code,
-            'client_id' => 'testclient',
-            'client_secret' => 'testpass',
+            'client_id' => $this->oauth2['client_id'],
+            'client_secret' => $this->oauth2['client_secret'],
             'state' => $state,
             'redirect_uri' => 'http://localhost:8000/oauth2/receive_authcode'
         );
-        $token = $client->post('/OAuth2/token', array(), $params)->send()->json();
+
+        try {
+            $token = $client->post($this->oauth2['endpoints']['token'], array(), $params)->send()->json();
+        } catch (\Exception $e) {
+            var_dump($e->getResponse()->getBody(true));
+        }
 
         $id_token = null;
         // validate id_token
@@ -112,10 +138,10 @@ class DefaultController extends Controller
             $id_token = $token['id_token'];
             $payload = $client->get('/OAuth2/tokeninfo?id_token='.$id_token, array())->send()->json();
 
-            if ($payload['issuer'] != 'http://192.168.56.101:8081/') {
+            if ($payload['issuer'] != $this->oauth2['server'].'/') {
                 throw new BadRequestHttpException('Illegal Issuer');
             }
-            if ($payload['audience'] != 'testclient') {
+            if ($payload['audience'] != $this->oauth2['client_id']) {
                 throw new BadRequestHttpException('Illegal audience');
             }
             if ($payload['expires_in'] < time()) {
@@ -166,21 +192,23 @@ class DefaultController extends Controller
      */
     public function refreshAction()
     {
+        $this->initialize();
+
         $em = $this->getDoctrine()->getManager();
         $OAuth2 = $em->getRepository('AcmeOAuth2ClientBundle:OAuth2\Client')->find(1);
         if (!is_object($OAuth2)) {
             throw new \Exception('OAuth2 unauthorization');
         }
-        $client = new Client('http://192.168.56.101:8081');
+        $client = new Client($this->oauth2['server']);
         var_dump($OAuth2->getRefreshToken());
         $params = array(
                 'grant_type'    => 'refresh_token',
-                'client_id' => 'testclient',
-                'client_secret' => 'testpass',
+                'client_id' => $this->oauth2['client_id'],
+                'client_secret' => $this->oauth2['client_secret'],
                 'refresh_token'         => $OAuth2->getRefreshToken(),
         );
 
-        $token = $client->post('/OAuth2/token', array()
+        $token = $client->post($this->oauth2['server'], array()
                                , $params)->send()->json();
         $OAuth2->setAccessToken($token['access_token']);
         if (array_key_exists('refresh_token', $token)) {
@@ -204,6 +232,8 @@ class DefaultController extends Controller
      */
     public function tokenInfoAction()
     {
+        $this->initialize();
+
         $Session = new Session();
         $nonce = $Session->get('nonce');
         $state = $Session->get('state');
@@ -213,15 +243,15 @@ class DefaultController extends Controller
         if (!is_object($OAuth2)) {
             throw new \Exception('OAuth2 unauthorization');
         }
-        $client = new Client('http://192.168.56.101:8081');
+        $client = new Client($this->oauth2['server']);
         $payload = $client->get('/OAuth2/tokeninfo?id_token='.$OAuth2->getIdToken(),array())->send()->json();
         var_dump($payload);
         return $this->render('AcmeOAuth2ClientBundle:Default:index.html.twig',
                              array(
                                  'access_token' => null,
                                  'nonce' => $nonce,
-                                 'state' => $state
-
+                                 'state' => $state,
+                                 'oauth2' => $this->oauth2
                              )
         );
     }
@@ -231,6 +261,7 @@ class DefaultController extends Controller
      */
     public function logoutAction()
     {
+        $this->initialize();
         $Session = new Session();
         $Session->remove('nonce');
         $Session->remove('state');
@@ -238,8 +269,8 @@ class DefaultController extends Controller
                              array(
                                  'access_token' => null,
                                  'nonce' => null,
-                                 'state' => null
-
+                                 'state' => null,
+                                 'oauth2' => $this->oauth2
                              )
         );
     }
