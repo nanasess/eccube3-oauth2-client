@@ -265,14 +265,7 @@ class DefaultController extends Controller
         $Session = new Session();
         $Session->remove('nonce');
         $Session->remove('state');
-        return $this->render('AcmeOAuth2ClientBundle:Default:index.html.twig',
-                             array(
-                                 'access_token' => null,
-                                 'nonce' => null,
-                                 'state' => null,
-                                 'oauth2' => $this->oauth2
-                             )
-        );
+        return $this->redirect('/');
     }
 
 }
