@@ -126,11 +126,7 @@ class DefaultController extends Controller
             'redirect_uri' => 'http://localhost:8000/oauth2/receive_authcode'
         );
 
-        try {
-            $token = $client->post($this->oauth2['endpoints']['token'], array(), $params)->send()->json();
-        } catch (\Exception $e) {
-            var_dump($e->getResponse()->getBody(true));
-        }
+        $token = $client->post($this->oauth2['endpoints']['token'], array(), $params)->send()->json();
 
         $id_token = null;
         // validate id_token
