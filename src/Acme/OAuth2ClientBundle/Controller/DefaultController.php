@@ -82,7 +82,7 @@ class DefaultController extends Controller
         // } else {
         //     $app['session']->set('access_token', 'not expire');
         // }
-        $example = $client->get('/api/example',
+        $example = $client->get('/api/v1/products',
                                 array(
                                     'Authorization' => 'Bearer '.$OAuth2->getAccessToken()
                                 ),
@@ -261,6 +261,17 @@ class DefaultController extends Controller
         $Session = new Session();
         $Session->remove('nonce');
         $Session->remove('state');
+        $em = $this->getDoctrine()->getManager();
+        $OAuth2 = $em->getRepository('AcmeOAuth2ClientBundle:OAuth2\Client')->find(1);
+        if (is_object($OAuth2)) {
+            $OAuth2->setAccessToken(null);
+            $OAuth2->setRefreshToken(null);
+            $OAuth2->setExpiresIn(null);
+            $OAuth2->setTokenType(null);
+            $OAuth2->setScope(null);
+            $OAuth2->setIdToken(null);
+            $em->flush();
+        }
         return $this->redirect('/');
     }
 

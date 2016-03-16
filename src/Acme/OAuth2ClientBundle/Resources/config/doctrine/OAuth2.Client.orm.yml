@@ -13,6 +13,7 @@ Acme\OAuth2ClientBundle\Entity\OAuth2\Client:
             type: string
             length: 255
             unique: true
+            nullable: true
             column: access_token
         tokenType:
             type: string
@@ -21,6 +22,7 @@ Acme\OAuth2ClientBundle\Entity\OAuth2\Client:
             column: token_type
         expiresIn:
             type: integer
+            nullable: true
             column: expires_in
         refreshToken:
             type: string
