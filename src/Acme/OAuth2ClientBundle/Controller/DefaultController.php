@@ -127,23 +127,23 @@ class DefaultController extends Controller
         );
 
         $token = $client->post($this->oauth2['endpoints']['token'], array(), $params)->send()->json();
-
         $id_token = null;
         // validate id_token
+        // see also http://developer.yahoo.co.jp/yconnect/id_token.html
         if (array_key_exists('id_token', $token) && !empty($token['id_token'])) {
             $id_token = $token['id_token'];
             $payload = $client->get('/OAuth2/tokeninfo?id_token='.$id_token, array())->send()->json();
 
-            if ($payload['issuer'] != $this->oauth2['server'].'/') {
+            if ($payload['iss'] != $this->oauth2['server']) {
                 throw new BadRequestHttpException('Illegal Issuer');
             }
-            if ($payload['audience'] != $this->oauth2['client_id']) {
+            if ($payload['aud'] != $this->oauth2['client_id']) {
                 throw new BadRequestHttpException('Illegal audience');
             }
-            if ($payload['expires_in'] < time()) {
+            if ($payload['exp'] < time()) {
                 throw new BadRequestHttpException('Token expires');
             }
-            if ($payload['issued_at'] + 300 < time()) {
+            if ($payload['iat'] + 600 < time()) {
                 throw new BadRequestHttpException('issued expires');
             }
             if ($payload['nonce'] != $nonce) {
