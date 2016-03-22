@@ -4,9 +4,9 @@
 <p>access_token: {{ access_token  }}</p>
 <p>state: {{ state }}</p>
 <p>nonce: {{ nonce }}</p>
-<p><a href="{{ oauth2.server }}{{ oauth2.endpoints.authorization }}?client_id={{ oauth2.client_id }}&redirect_uri=http%3A%2F%2Flocalhost:8000%2Foauth2%2Freceive_authcode&response_type=code&state={{ state }}&scope=read%20write">OAuth2 Authorization code Flow</a></p>
+<p><a href="{{ oauth2.server }}{{ oauth2.endpoints.authorization }}?client_id={{ oauth2.client_id }}&redirect_uri=http%3A%2F%2Flocalhost:8000%2Foauth2%2Freceive_authcode&response_type=code&state={{ state }}&nonce={{ nonce }}&scope=read%20write">OAuth2 Authorization code Flow</a></p>
 <p><a href="{{ oauth2.server }}{{ oauth2.endpoints.authorization }}?client_id={{ oauth2.client_id }}&redirect_uri=http%3A%2F%2Flocalhost:8000%2Foauth2%2Freceive_authcode&response_type=code&state={{ state }}&nonce={{ nonce }}&scope=read%20write%20openid%20offline_access">OpenID Connect Authorization code Flow</a></p>
-<p><a href="{{ oauth2.server }}{{ oauth2.endpoints.authorization }}?client_id={{ oauth2.client_id }}&redirect_uri=http%3A%2F%2Flocalhost:8000%2Foauth2%2Freceive_authcode&response_type=token&state={{ state }}&scope=read%20write">OAuth2 Implicit Flow</a>(リダイレクトで戻ってきた QueryString にトークンが付与されます)</p>
+<p><a href="{{ oauth2.server }}{{ oauth2.endpoints.authorization }}?client_id={{ oauth2.client_id }}&redirect_uri=http%3A%2F%2Flocalhost:8000%2Foauth2%2Freceive_authcode&response_type=token&state={{ state }}&nonce={{ nonce }}&scope=read%20write">OAuth2 Implicit Flow</a>(リダイレクトで戻ってきた QueryString にトークンが付与されます)</p>
 <p><a href="{{ oauth2.server }}{{ oauth2.endpoints.authorization }}?client_id={{ oauth2.client_id }}&redirect_uri=http%3A%2F%2Flocalhost:8000%2Foauth2%2Freceive_authcode&response_type=id_token%20token&state={{ state }}&nonce={{ nonce }}&scope=read%20write%20openid">OpenID Connect Implicit Flow</a>(リダイレクトで戻ってきた QueryString にトークンが付与されます)</p>
 <p><a href="/api/example">GET /api/v1/products</a></p>
 <p><a href="/oauth2/refresh">refresh</a></p>

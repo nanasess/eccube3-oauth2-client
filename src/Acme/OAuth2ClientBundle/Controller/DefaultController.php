@@ -132,7 +132,7 @@ class DefaultController extends Controller
         // see also http://developer.yahoo.co.jp/yconnect/id_token.html
         if (array_key_exists('id_token', $token) && !empty($token['id_token'])) {
             $id_token = $token['id_token'];
-            $payload = $client->get('/OAuth2/tokeninfo?id_token='.$id_token, array())->send()->json();
+            $payload = $client->get('/OAuth2/v1/tokeninfo?id_token='.$id_token, array())->send()->json();
 
             if ($payload['iss'] != $this->oauth2['server']) {
                 throw new BadRequestHttpException('Illegal Issuer');
