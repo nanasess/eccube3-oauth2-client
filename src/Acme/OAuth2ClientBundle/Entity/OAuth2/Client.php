@@ -247,4 +247,17 @@ class Client
     {
         return $this->nonce;
     }
+
+    public function getExpireTime()
+    {
+        if ($this->getUpdatedAt()) {
+            return $this->getUpdatedAt()->getTimestamp() + $this->getExpiresIn();
+        }
+        return 0;
+    }
+
+    public function isExpire()
+    {
+        return $this->getExpireTime() <= time();
+    }
 }

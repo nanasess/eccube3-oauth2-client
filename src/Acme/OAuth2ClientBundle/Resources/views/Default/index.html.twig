@@ -1,14 +1,19 @@
 <!-- † -->
 <h1>OAuth2 Client</h1>
 
-<p>access_token: {{ access_token  }}</p>
-<p>state: {{ state }}</p>
-<p>nonce: {{ nonce }}</p>
-<p><a href="{{ oauth2.server }}{{ oauth2.endpoints.authorization }}?client_id={{ oauth2.client_id }}&redirect_uri=http%3A%2F%2Flocalhost:8000%2Foauth2%2Freceive_authcode&response_type=code&state={{ state }}&nonce={{ nonce }}&scope=read%20write">OAuth2 Authorization code Flow</a></p>
-<p><a href="{{ oauth2.server }}{{ oauth2.endpoints.authorization }}?client_id={{ oauth2.client_id }}&redirect_uri=http%3A%2F%2Flocalhost:8000%2Foauth2%2Freceive_authcode&response_type=code&state={{ state }}&nonce={{ nonce }}&scope=read%20write%20openid%20offline_access">OpenID Connect Authorization code Flow</a></p>
-<p><a href="{{ oauth2.server }}{{ oauth2.endpoints.authorization }}?client_id={{ oauth2.client_id }}&redirect_uri=http%3A%2F%2Flocalhost:8000%2Foauth2%2Freceive_authcode&response_type=token&state={{ state }}&nonce={{ nonce }}&scope=read%20write">OAuth2 Implicit Flow</a>(リダイレクトで戻ってきた QueryString にトークンが付与されます)</p>
-<p><a href="{{ oauth2.server }}{{ oauth2.endpoints.authorization }}?client_id={{ oauth2.client_id }}&redirect_uri=http%3A%2F%2Flocalhost:8000%2Foauth2%2Freceive_authcode&response_type=id_token%20token&state={{ state }}&nonce={{ nonce }}&scope=read%20write%20openid">OpenID Connect Implicit Flow</a>(リダイレクトで戻ってきた QueryString にトークンが付与されます)</p>
-<p><a href="/api/example">GET /api/v1/products</a></p>
+<p>redirect_uri には <strong>{{ url('acme_oauth2client_default_oauth2') }}</strong> を指定してください</p>
+<p>id_token の解析には <a href="http://jwt.io/" target="_blank">http://jwt.io/</a> をご利用ください</p>
+<ul>
+    <li>access_token: {{ access_token  }}</li>
+    <li>id_token: <input type="text" size="128" value="{{ id_token }}" /></li>
+    <li>state: {{ state }}</li>
+    <li>nonce: {{ nonce }}</li>
+</ul>
+<p><a href="{{ oauth2.server }}{{ oauth2.endpoints.authorization }}?client_id={{ oauth2.client_id }}&redirect_uri={{ url('acme_oauth2client_default_oauth2')|url_encode }}&response_type=code&state={{ state }}&nonce={{ nonce }}&scope=read%20write">OAuth2 Authorization code Flow</a></p>
+<p><a href="{{ oauth2.server }}{{ oauth2.endpoints.authorization }}?client_id={{ oauth2.client_id }}&redirect_uri={{ url('acme_oauth2client_default_oauth2')|url_encode }}&response_type=code&state={{ state }}&nonce={{ nonce }}&scope=read%20write%20openid%20offline_access">OpenID Connect Authorization code Flow</a></p>
+<p><a href="{{ oauth2.server }}{{ oauth2.endpoints.authorization }}?client_id={{ oauth2.client_id }}&redirect_uri={{ url('acme_oauth2client_default_oauth2')|url_encode }}&response_type=token&state={{ state }}&nonce={{ nonce }}&scope=read%20write">OAuth2 Implicit Flow</a>(リダイレクトで戻ってきた QueryString にトークンが付与されます)</p>
+<p><a href="{{ oauth2.server }}{{ oauth2.endpoints.authorization }}?client_id={{ oauth2.client_id }}&redirect_uri={{ url('acme_oauth2client_default_oauth2')|url_encode }}&response_type=id_token%20token&state={{ state }}&nonce={{ nonce }}&scope=read%20write%20openid">OpenID Connect Implicit Flow</a>(リダイレクトで戻ってきた QueryString にトークンが付与されます)</p>
+<p><a href="/api/example">GET /api/v0/products</a></p>
 <p><a href="/oauth2/refresh">refresh</a></p>
 <p><a href="/oauth2/tokeninfo">tokeninfo</a></p>
 <p><a href="/">Go TOP</a></p>
