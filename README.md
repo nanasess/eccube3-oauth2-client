@@ -1,5 +1,5 @@
-eccube3-oauth2-client
-=====================
+EC-CUBE3 OAuth2.0 Client for PHP
+=================================
 
 ```
 parameters:
@@ -11,3 +11,4 @@ parameters:
     oauth2.authorization_endpoint: <oauth2 authorization endpoint>
 ```
 
+`redirect_uri` には http://localhost:8000/oauth2/receive_authcode を指定してください
