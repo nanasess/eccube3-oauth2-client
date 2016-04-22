@@ -20,7 +20,8 @@ class DefaultController extends Controller
             'endpoints' => array(
                 'token' => $this->container->getParameter('oauth2.token_endpoint'),
                 'authorization' => $this->container->getParameter('oauth2.authorization_endpoint'),
-                'tokeninfo' => $this->container->getParameter('oauth2.tokeninfo_endpoint')
+                'tokeninfo' => $this->container->getParameter('oauth2.tokeninfo_endpoint'),
+                'userinfo' => $this->container->getParameter('oauth2.userinfo_endpoint')
             )
         );
     }
@@ -109,6 +110,7 @@ class DefaultController extends Controller
             $Session->set('access_token', 'not expire');
         }
         $example = $client->get('/api/v0/products',
+        // $example = $client->get($this->oauth2['endpoints']['userinfo'], // UserInfo endpoint
                                 array(
                                     'Authorization' => 'Bearer '.$OAuth2Client->getAccessToken()
                                 ),
@@ -139,6 +141,11 @@ class DefaultController extends Controller
         $request = Request::createFromGlobals();
         $authorized_code = $request->get('code');
 
+        if ($request->get('error')) {
+            $error = $request->get('error');
+            $error_description = $request->get('error_description');
+            throw new BadRequestHttpException($error.': '.$error_description);
+        }
         if ($request->get('state') != $state) {
             throw new BadRequestHttpException('Illegal state');
         }
@@ -154,9 +161,9 @@ class DefaultController extends Controller
         );
 
         try {
-        $token = $client->post($this->oauth2['endpoints']['token'], array(), $params)->send()->json();
+            $token = $client->post($this->oauth2['endpoints']['token'], array(), $params)->send()->json();
         } catch (\Exception $e) {
-            var_dump($e->getResponse()->getBody(true));
+            throw new BadRequestHttpException($e->getResponse()->getBody(true));
         }
         $id_token = null;
         // validate id_token
