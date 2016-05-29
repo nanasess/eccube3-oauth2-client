@@ -157,7 +157,7 @@ class DefaultController extends Controller
             'client_id' => $this->oauth2['client_id'],
             'client_secret' => $this->oauth2['client_secret'],
             'state' => $state,
-            'redirect_uri' => 'http://localhost:8000/oauth2/receive_authcode'
+            'redirect_uri' => $this->generateUrl('acme_oauth2client_default_oauth2', array(), true)
         );
 
         try {
