@@ -19,7 +19,8 @@ class DefaultController extends Controller
             'client_secret' => $this->container->getParameter('oauth2.client_secret'),
             'endpoints' => array(
                 'token' => $this->container->getParameter('oauth2.token_endpoint'),
-                'authorization' => $this->container->getParameter('oauth2.authorization_endpoint'),
+                'authorization_admin' => $this->container->getParameter('oauth2.authorization_endpoint_admin'),
+                'authorization_mypage' => $this->container->getParameter('oauth2.authorization_endpoint_mypage'),
                 'tokeninfo' => $this->container->getParameter('oauth2.tokeninfo_endpoint'),
                 'userinfo' => $this->container->getParameter('oauth2.userinfo_endpoint')
             )
@@ -64,7 +65,7 @@ class DefaultController extends Controller
     }
 
     /**
-     * @Route("/api/example")
+     * @Route("/api/product_withauth")
      */
     public function apiCallAction()
     {
@@ -109,13 +110,106 @@ class DefaultController extends Controller
         } else {
             $Session->set('access_token', 'not expire');
         }
-        $example = $client->get('/api/v0/products',
+        $example = $client->get('/api/v0/product',
         // $example = $client->get($this->oauth2['endpoints']['userinfo'], // UserInfo endpoint
                                 array(
                                     'Authorization' => 'Bearer '.$OAuth2Client->getAccessToken()
                                 ),
                                 $params)->send()->json();
-        var_dump($example);
+        dump($example);
+        return $this->render('AcmeOAuth2ClientBundle:Default:index.html.twig',
+                             array(
+                                 'access_token' => $OAuth2Client->getAccessToken(),
+                                 'id_token' => $OAuth2Client->getIdToken(),
+                                 'nonce' => $nonce,
+                                 'state' => $state,
+                                 'oauth2' => $this->oauth2
+                             )
+        );
+    }
+
+    /**
+     * @Route("/api/product")
+     */
+    public function apiCallAction2()
+    {
+        $this->initialize();
+
+        $Session = new Session();
+        $nonce = $Session->get('nonce');
+        $state = $Session->get('state');
+
+        $em = $this->getDoctrine()->getManager();
+        $params = array();
+        $client = new Client($this->oauth2['server']);
+        $example = $client->get('/api/v0/product',
+                                array(),
+                                $params)->send()->json();
+        dump($example);
+        return $this->render('AcmeOAuth2ClientBundle:Default:index.html.twig',
+                             array(
+                                 'access_token' => null,
+                                 'id_token' => null,
+                                 'nonce' => $nonce,
+                                 'state' => $state,
+                                 'oauth2' => $this->oauth2
+                             )
+        );
+    }
+
+    /**
+     * @Route("/api/customer")
+     */
+    public function apiCallAction3()
+    {
+        $this->initialize();
+
+        $Session = new Session();
+        $nonce = $Session->get('nonce');
+        $state = $Session->get('state');
+
+        $em = $this->getDoctrine()->getManager();
+        $params = array();
+        $OAuth2Client = $em->getRepository('AcmeOAuth2ClientBundle:OAuth2\Client')->find(1);
+        if (!is_object($OAuth2Client)) {
+            throw new \Exception('OAuth2 unauthorization');
+        }
+        $client = new Client($this->oauth2['server']);
+        if ($OAuth2Client->isExpire()) {
+            var_dump('access token is expired');
+            $params = array(
+                'grant_type'    => 'refresh_token',
+                'client_id' => $this->oauth2['client_id'],
+                'client_secret' => $this->oauth2['client_secret'],
+                'refresh_token' => $OAuth2Client->getRefreshToken(),
+            );
+
+            $token = $client->post($this->oauth2['endpoints']['token'], array()
+                                   , $params)->send()->json();
+            $OAuth2Client->setAccessToken($token['access_token']);
+            if (array_key_exists('refresh_token', $token)) {
+                $OAuth2Client->setRefreshToken($token['refresh_token']);
+            }
+            $OAuth2Client->setExpiresIn($token['expires_in']);
+            $OAuth2Client->setTokenType($token['token_type']);
+            $OAuth2Client->setScope($token['scope']);
+            if (array_key_exists('id_token', $token)) {
+                $OAuth2Client->setIdToken($token['id_token']);
+            } else {
+                $OAuth2Client->setIdToken(null);
+            }
+            $OAuth2Client->setUpdatedAt(new \DateTime());
+            $em->flush($OAuth2Client);
+        } else {
+            $Session->set('access_token', 'not expire');
+        }
+        $example = $client->get('/api/v0/customer',
+        // $example = $client->get($this->oauth2['endpoints']['userinfo'], // UserInfo endpoint
+                                array(
+                                    'Authorization' => 'Bearer '.$OAuth2Client->getAccessToken()
+                                ),
+                                $params)->send()->json();
+        dump($example);
         return $this->render('AcmeOAuth2ClientBundle:Default:index.html.twig',
                              array(
                                  'access_token' => $OAuth2Client->getAccessToken(),

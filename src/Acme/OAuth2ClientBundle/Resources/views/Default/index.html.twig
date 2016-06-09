@@ -9,11 +9,19 @@
     <li>state: {{ state }}</li>
     <li>nonce: {{ nonce }}</li>
 </ul>
-<p><a href="{{ oauth2.server }}{{ oauth2.endpoints.authorization }}?client_id={{ oauth2.client_id }}&redirect_uri={{ url('acme_oauth2client_default_oauth2')|url_encode }}&response_type=code&state={{ state }}&nonce={{ nonce }}&scope=read%20write">OAuth2 Authorization code Flow</a></p>
-<p><a href="{{ oauth2.server }}{{ oauth2.endpoints.authorization }}?client_id={{ oauth2.client_id }}&redirect_uri={{ url('acme_oauth2client_default_oauth2')|url_encode }}&response_type=code&state={{ state }}&nonce={{ nonce }}&scope=read%20write%20openid%20offline_access">OpenID Connect Authorization code Flow</a></p>
-<p><a href="{{ oauth2.server }}{{ oauth2.endpoints.authorization }}?client_id={{ oauth2.client_id }}&redirect_uri={{ url('acme_oauth2client_default_oauth2')|url_encode }}&response_type=token&state={{ state }}&nonce={{ nonce }}&scope=read%20write">OAuth2 Implicit Flow</a>(リダイレクトで戻ってきた QueryString にトークンが付与されます)</p>
-<p><a href="{{ oauth2.server }}{{ oauth2.endpoints.authorization }}?client_id={{ oauth2.client_id }}&redirect_uri={{ url('acme_oauth2client_default_oauth2')|url_encode }}&response_type=id_token%20token&state={{ state }}&nonce={{ nonce }}&scope=read%20write%20openid">OpenID Connect Implicit Flow</a>(リダイレクトで戻ってきた QueryString にトークンが付与されます)</p>
-<p><a href="/api/example">GET /api/v0/products</a></p>
+<p><a href="{{ oauth2.server }}{{ oauth2.endpoints.authorization_admin }}?client_id={{ oauth2.client_id }}&redirect_uri={{ url('acme_oauth2client_default_oauth2')|url_encode }}&response_type=code&state={{ state }}&nonce={{ nonce }}&scope=product_read%20product_write%20customer_read">Member OAuth2 Authorization code Flow</a></p>
+<p><a href="{{ oauth2.server }}{{ oauth2.endpoints.authorization_admin }}?client_id={{ oauth2.client_id }}&redirect_uri={{ url('acme_oauth2client_default_oauth2')|url_encode }}&response_type=code&state={{ state }}&nonce={{ nonce }}&scope=product_read%20product_write%20customer_read%20openid%20offline_access">Member OpenID Connect Authorization code Flow</a></p>
+<p><a href="{{ oauth2.server }}{{ oauth2.endpoints.authorization_admin }}?client_id={{ oauth2.client_id }}&redirect_uri={{ url('acme_oauth2client_default_oauth2')|url_encode }}&response_type=token&state={{ state }}&nonce={{ nonce }}&scope=product_read%20product_write%20customer_read">Member OAuth2 Implicit Flow</a>(リダイレクトで戻ってきた QueryString にトークンが付与されます)</p>
+<p><a href="{{ oauth2.server }}{{ oauth2.endpoints.authorization_admin }}?client_id={{ oauth2.client_id }}&redirect_uri={{ url('acme_oauth2client_default_oauth2')|url_encode }}&response_type=id_token%20token&state={{ state }}&nonce={{ nonce }}&scope=product_read%20product_write%20customer_read%20openid">Member OpenID Connect Implicit Flow</a>(リダイレクトで戻ってきた QueryString にトークンが付与されます)</p>
+<p><a href="{{ oauth2.server }}{{ oauth2.endpoints.authorization_mypage }}?client_id={{ oauth2.client_id }}&redirect_uri={{ url('acme_oauth2client_default_oauth2')|url_encode }}&response_type=code&state={{ state }}&nonce={{ nonce }}&scope=customer_read%20customer_address_read%20openid%20offline_access">Customer OpenID Connect Authorization code Flow</a></p>
+
+<ul>
+    <li><a href="/api/product">(認証なし) GET /api/v0/product</a></li>
+    <li><a href="/api/product_withauth">(認証あり) GET /api/v0/product</a></li>
+    <li><a href="/api/customer">(認証あり) GET /api/v0/customer</a> Customer で認証した場合は自分のみ, Member で認証した場合はすべてのデータを返します</li>
+</ul>
+
+<p></p>
 <p><a href="/oauth2/refresh">refresh</a></p>
 <p><a href="/oauth2/tokeninfo">tokeninfo</a></p>
 <p><a href="/">Go TOP</a></p>
